@@ -7,6 +7,9 @@ import LoadingScreen from '../components/LoadingScreen';
 import DevConsole from '../components/DevConsole';
 import PredictForm from "../components/predictform"
 import NetCDFUploader from "../components/netcdf_uploader";
+import SachetUploadPanel from '../components/SachetUploadPanel';
+import CoordinatesDisplay from '../components/CoordinatesDisplay';
+import { Feature, Polygon, MultiPolygon } from 'geojson';
 
 // Dynamically import the map component to avoid SSR issues
 const MapComponent = dynamic(() => import('../components/MapComponent'), {
@@ -23,7 +26,9 @@ const REGION_COMMANDS = {
 export default function Home() {
   const router = useRouter();
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [mapLayer, setMapLayer] = useState<'satellite' | 'street' | 'tiff'>('satellite');
+  const [mapLayer, setMapLayer] = useState<'satellite' | 'street' | 'tiff' | 'sachet'>('satellite');
+  const [sachetGeoJSONData, setSachetGeoJSONData] = useState<Feature<Polygon | MultiPolygon>[]>([]);
+  const [hoverCoordinates, setHoverCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(8);
@@ -339,6 +344,16 @@ export default function Home() {
                 >
                   TIFF Overlay
                 </button>
+                <button 
+                  onClick={() => setMapLayer('sachet')}
+                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                    mapLayer === 'sachet'
+                      ? 'bg-green-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  SACHET
+                </button>
               </div>
             </div>
           </div>
@@ -346,9 +361,20 @@ export default function Home() {
 
         {/* Map Container */}
         <div className="flex-1 relative">
+          {/* SACHET Upload Panel - Show when SACHET layer is selected */}
+          {mapLayer === 'sachet' && (
+            <div className="absolute top-4 left-4 right-4 z-[1000]">
+              <SachetUploadPanel 
+                onGeoJSONDataProcessed={(data) => setSachetGeoJSONData(data)}
+              />
+            </div>
+          )}
+          
           <MapComponent 
             selectedRegion={selectedRegion} 
             mapLayer={mapLayer}
+            sachetGeoJSONData={sachetGeoJSONData}
+            onHoverCoordinatesChange={setHoverCoordinates}
             isOffline={isOffline}
             currentZoom={currentZoom}
             onZoomChange={setCurrentZoom}
@@ -356,6 +382,12 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {/* Coordinates Display */}
+      <CoordinatesDisplay 
+        lat={hoverCoordinates?.lat || null} 
+        lng={hoverCoordinates?.lng || null} 
+      />
 
       {/* Dev Console */}
       <DevConsole 

@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker, Popup, GeoJSON, Circle } from 'react-leaflet';
 import L from 'leaflet';
+import { Feature, Polygon, MultiPolygon } from 'geojson';
 import 'leaflet/dist/leaflet.css';
 import SimpleTileLayer from './SimpleTileLayer';
 import { loadRegionData, findNearestLocation, LocationData } from '../utils/dataUtils';
@@ -48,7 +49,9 @@ const REGIONS: Record<string, RegionBounds> = {
 
 interface MapComponentProps {
   selectedRegion: string | null;
-  mapLayer: 'satellite' | 'street' | 'tiff';
+  mapLayer: 'satellite' | 'street' | 'tiff' | 'sachet';
+  sachetGeoJSONData: Feature<Polygon | MultiPolygon>[];
+  onHoverCoordinatesChange: (coords: { lat: number; lng: number } | null) => void;
   isOffline: boolean;
   onZoomChange?: (zoom: number) => void;
   currentZoom?: number;
@@ -72,6 +75,8 @@ const formatProbabilityPercentage = (probability: number | null | undefined): st
 export default function MapComponent({ 
   selectedRegion, 
   mapLayer, 
+  sachetGeoJSONData,
+  onHoverCoordinatesChange,
   isOffline, 
   onZoomChange,
   currentZoom = 8,
@@ -140,6 +145,11 @@ export default function MapComponent({
   }, [selectedRegion, onLoadingChange]);
   
   const handleMapClick = async (lat: number, lng: number) => {
+    // Disable map click when SACHET layer is active
+    if (mapLayer === 'sachet') {
+      return;
+    }
+    
     setIsMarkerLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -176,72 +186,125 @@ export default function MapComponent({
           onMapReady={setMapInstance}
           onZoomChange={onZoomChange}
           panToLocation={panToLocation}
+          onHoverCoordinatesChange={onHoverCoordinatesChange}
         />
         
         <SimpleTileLayer type={mapLayer} isOffline={isOffline} />
         
-        {mapLayer === 'tiff' && (
+        {mapLayer === 'tiff' && mapLayer !== 'sachet' && (
           <SimpleTileLayer type="satellite" opacity={0.7} isOffline={isOffline} />
         )}
 
         <BoundaryLayers boundaries={boundaries} />
 
+        {/* Render SACHET GeoJSON data when SACHET layer is active */}
+        {mapLayer === 'sachet' && sachetGeoJSONData.map((feature, index) => (
+          <GeoJSON
+            key={`sachet-${index}`}
+            data={feature}
+            style={{
+              color: '#ff6b6b',
+              weight: 2,
+              opacity: 0.8,
+              fillColor: '#ff6b6b',
+              fillOpacity: 0.2,
+            }}
+            onEachFeature={(feature, layer) => {
+              const props = feature.properties;
+              if (props) {
+                const popupContent = `
+                  <div class="text-sm font-sans max-w-sm">
+                    ${props.headline ? `<h3 class="font-bold text-base mb-2 text-red-600">${props.headline}</h3>` : ''}
+                    ${props.event ? `<p class="mb-2"><strong>Event:</strong> ${props.event}</p>` : ''}
+                    ${props.severity ? `<p class="mb-2"><strong>Severity:</strong> <span class="font-semibold text-orange-600">${props.severity}</span></p>` : ''}
+                    ${props.urgency ? `<p class="mb-2"><strong>Urgency:</strong> ${props.urgency}</p>` : ''}
+                    ${props.certainty ? `<p class="mb-2"><strong>Certainty:</strong> ${props.certainty}</p>` : ''}
+                    ${props.areaDesc ? `<p class="mb-2"><strong>Area:</strong> ${props.areaDesc}</p>` : ''}
+                    ${props.description ? `<p class="mb-2"><strong>Description:</strong> ${props.description}</p>` : ''}
+                    ${props.instruction ? `<p class="mb-2"><strong>Instructions:</strong> ${props.instruction}</p>` : ''}
+                    ${props.effective ? `<p class="mb-1"><strong>Effective:</strong> ${new Date(props.effective).toLocaleString()}</p>` : ''}
+                    ${props.expires ? `<p class="mb-1"><strong>Expires:</strong> ${new Date(props.expires).toLocaleString()}</p>` : ''}
+                    ${props.sender ? `<p class="text-xs text-gray-600 mt-2">Source: ${props.sender}</p>` : ''}
+                  </div>
+                `;
+                layer.bindPopup(popupContent, { maxWidth: 400 });
+              }
+            }}
+          />
+        ))}
+
         {/* Render prediction markers */}
         {filteredPredictions.map((result, index) => (
-          <Marker
-            key={`prediction-${selectedDay}-${index}`}
-            position={[result.lat, result.lon]}
-            icon={result.prediction === 0 ? lowRiskIcon : highRiskIcon}
-          >
-            <Popup>
-              <div className="text-sm font-sans">
-                <p className="font-bold text-base mb-2">
-                  Prediction: <span style={{ color: result.prediction === 0 ? '#22c55e' : '#ef4444' }}>
-                    {result.prediction === 0 ? 'Low Risk' : 'High Risk'}
-                  </span>
-                </p>
-                <div className="space-y-1">
-                  <p><strong>Location:</strong> {result.lat.toFixed(5)}, {result.lon.toFixed(5)}</p>
-                  <p><strong>Date:</strong> {result.day}</p>
-                  {result.landslide_probability !== null && result.landslide_probability !== undefined && (
-                    <p><strong>Probability (%):</strong> 
-                      <span className="font-mono ml-1 font-bold">{formatProbabilityPercentage(result.landslide_probability)}</span>
-                    </p>
-                  )}
-                  {selectedDay !== null && availableDays.length > 0 && (
-                    <p><strong>Day:</strong> {selectedDay + 1} of {availableDays.length}</p>
+          <div key={`prediction-group-${selectedDay}-${index}`}>
+            {/* 2km Buffer Zone Circle */}
+            <Circle
+              center={[result.lat, result.lon]}
+              radius={2000} // 2km in meters
+              pathOptions={{
+                color: result.prediction === 0 ? '#22c55e' : '#ef4444',
+                weight: 1,
+                opacity: 0.6,
+                fillColor: result.prediction === 0 ? '#22c55e' : '#ef4444',
+                fillOpacity: 0.1,
+              }}
+            />
+            
+            {/* Prediction Marker */}
+            <Marker
+              position={[result.lat, result.lon]}
+              icon={result.prediction === 0 ? lowRiskIcon : highRiskIcon}
+            >
+              <Popup>
+                <div className="text-sm font-sans">
+                  <p className="font-bold text-base mb-2">
+                    Prediction: <span style={{ color: result.prediction === 0 ? '#22c55e' : '#ef4444' }}>
+                      {result.prediction === 0 ? 'Low Risk' : 'High Risk'}
+                    </span>
+                  </p>
+                  <div className="space-y-1">
+                    <p><strong>Location:</strong> {result.lat.toFixed(5)}, {result.lon.toFixed(5)}</p>
+                    <p><strong>Date:</strong> {result.day}</p>
+                    {result.landslide_probability !== null && result.landslide_probability !== undefined && (
+                      <p><strong>Probability (%):</strong> 
+                        <span className="font-mono ml-1 font-bold">{formatProbabilityPercentage(result.landslide_probability)}</span>
+                      </p>
+                    )}
+                    {selectedDay !== null && availableDays.length > 0 && (
+                      <p><strong>Day:</strong> {selectedDay + 1} of {availableDays.length}</p>
+                    )}
+                    <p><strong>Buffer Zone:</strong> 2km radius</p>
+                  </div>
+                  
+                  {/* Weather Data Section */}
+                  {result.weather_data && (
+                    <div className="mt-2 pt-2 border-t border-gray-300">
+                      <p className="font-medium text-gray-700 mb-1">Weather Data:</p>
+                      <div className="text-xs space-y-1">
+                        {result.weather_data.temperature_max && (
+                          <p>🌡️ Max Temp: {result.weather_data.temperature_max.toFixed(1)}°C</p>
+                        )}
+                        {result.weather_data.temperature_min && (
+                          <p>🌡️ Min Temp: {result.weather_data.temperature_min.toFixed(1)}°C</p>
+                        )}
+                        {result.weather_data.precipitation && (
+                          <p>🌧️ Precipitation: {result.weather_data.precipitation.toFixed(2)}mm</p>
+                        )}
+                        {result.weather_data.snowfall && (
+                          <p>❄️ Snowfall: {result.weather_data.snowfall.toFixed(2)}cm</p>
+                        )}
+                        {result.weather_data.wind_speed && (
+                          <p>💨 Wind Speed: {result.weather_data.wind_speed.toFixed(1)}km/h</p>
+                        )}
+                        {result.weather_data.pressure && (
+                          <p>📊 Pressure: {result.weather_data.pressure.toFixed(1)}hPa</p>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
-                
-                {/* Weather Data Section */}
-                {result.weather_data && (
-                  <div className="mt-2 pt-2 border-t border-gray-300">
-                    <p className="font-medium text-gray-700 mb-1">Weather Data:</p>
-                    <div className="text-xs space-y-1">
-                      {result.weather_data.temperature_max && (
-                        <p>🌡️ Max Temp: {result.weather_data.temperature_max.toFixed(1)}°C</p>
-                      )}
-                      {result.weather_data.temperature_min && (
-                        <p>🌡️ Min Temp: {result.weather_data.temperature_min.toFixed(1)}°C</p>
-                      )}
-                      {result.weather_data.precipitation && (
-                        <p>🌧️ Precipitation: {result.weather_data.precipitation.toFixed(2)}mm</p>
-                      )}
-                      {result.weather_data.snowfall && (
-                        <p>❄️ Snowfall: {result.weather_data.snowfall.toFixed(2)}cm</p>
-                      )}
-                      {result.weather_data.wind_speed && (
-                        <p>💨 Wind Speed: {result.weather_data.wind_speed.toFixed(1)}km/h</p>
-                      )}
-                      {result.weather_data.pressure && (
-                        <p>📊 Pressure: {result.weather_data.pressure.toFixed(1)}hPa</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Popup>
-          </Marker>
+              </Popup>
+            </Marker>
+          </div>
         ))}
 
         {/* Regular markers from map clicks */}
@@ -286,9 +349,10 @@ interface MapControllerProps {
   onMapReady?: (map: L.Map) => void;
   onZoomChange?: (zoom: number) => void;
   panToLocation: [number, number] | null;
+  onHoverCoordinatesChange: (coords: { lat: number; lng: number } | null) => void;
 }
 
-function MapController({ selectedRegion, onMapClick, onMapReady, onZoomChange, panToLocation }: MapControllerProps) {
+function MapController({ selectedRegion, onMapClick, onMapReady, onZoomChange, panToLocation, onHoverCoordinatesChange }: MapControllerProps) {
   const map = useMap();
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -297,6 +361,28 @@ function MapController({ selectedRegion, onMapClick, onMapReady, onZoomChange, p
       onMapReady(map);
     }
   }, [map, onMapReady]);
+
+  // Handle hover coordinates
+  useEffect(() => {
+    const handleMouseMove = (e: L.LeafletMouseEvent) => {
+      onHoverCoordinatesChange({
+        lat: e.latlng.lat,
+        lng: e.latlng.lng
+      });
+    };
+
+    const handleMouseOut = () => {
+      onHoverCoordinatesChange(null);
+    };
+
+    map.on('mousemove', handleMouseMove);
+    map.on('mouseout', handleMouseOut);
+
+    return () => {
+      map.off('mousemove', handleMouseMove);
+      map.off('mouseout', handleMouseOut);
+    };
+  }, [map, onHoverCoordinatesChange]);
 
   useEffect(() => {
     if (panToLocation) {

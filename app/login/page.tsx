@@ -46,6 +46,9 @@ export default function LoginPage() {
   useEffect(() => {
     setIsMounted(true);
     
+    // Temporary bypass: Redirect to Dashboard immediately
+    router.push('/Dashboard');
+    
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
