@@ -1,0 +1,11 @@
+id,lat,lng,location,elevation,slopeAngle,rainfall,soilType,vegetation,landslideRisk,avalancheRisk,temperature,humidity
+1,34.0837,74.7973,Srinagar,1585,15,1200,Alluvial,Mixed,High,High,8,88
+2,32.2432,77.1892,Manali,2050,35,1800,Rocky,Dense Forest,High,High,4,90
+3,31.1048,77.1734,Shimla,2206,30,1600,Rocky,Sparse Forest,High,High,6,85
+4,32.7266,74.8570,Jammu,327,10,1300,Alluvial,Agricultural,High,Medium,24,68
+5,34.1526,77.5771,Leh,3524,40,200,Rocky,Barren,High,High,-10,40
+6,33.7782,76.5762,Kargil,2676,45,400,Rocky,Sparse Forest,High,High,-2,50
+7,31.6340,76.8130,Dharamshala,1457,25,2200,Loamy,Dense Forest,High,High,14,92
+8,32.0840,76.5130,Kullu,1230,20,1800,Sandy,Mixed,High,High,11,80
+9,33.2778,75.3412,Udhampur,756,12,1100,Clay,Agricultural,High,Medium,21,70
+10,31.8040,76.1200,Palampur,1219,18,2000,Loamy,Dense Forest,High,High,12,85

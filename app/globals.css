@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 17, 24, 39;
+  --background-end-rgb: 31, 41, 55;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  font-family: 'Inter', sans-serif;
+}
+
+/* Leaflet map styling */
+.leaflet-container {
+  background: #1f2937 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-control-zoom {
+  background: rgba(31, 41, 55, 0.9) !important;
+  border: 1px solid #374151 !important;
+  border-radius: 8px !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(31, 41, 55, 0.9) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(55, 65, 81, 0.9) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #374151 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.leaflet-popup-tip {
+  background: #374151 !important;
+}
+
+.leaflet-popup-close-button {
+  color: #9ca3af !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #ffffff !important;
+}
+
+/* Enhanced boundary styling */
+.leaflet-interactive {
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* Tile loading indicators */
+.leaflet-tile-container img {
+  transition: opacity 0.2s ease-in-out !important;
+}
+
+.leaflet-tile-loading {
+  opacity: 0.5 !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+button:focus,
+input:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Military-style design elements */
+.military-border {
+  border: 2px solid #10b981;
+  border-radius: 4px;
+  position: relative;
+}
+
+.military-border::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 1px solid #065f46;
+  border-radius: 6px;
+  z-index: -1;
+}
+
+/* Risk level indicators */
+.risk-high {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.risk-medium {
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.risk-low {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+/* Map layer controls */
+.map-controls {
+  backdrop-filter: blur(10px);
+  background: rgba(31, 41, 55, 0.9);
+  border: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+/* Data overlay animations */
+.overlay-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.overlay-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.overlay-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.overlay-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 300ms, transform 300ms;
+}

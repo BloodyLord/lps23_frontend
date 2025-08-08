@@ -1,0 +1,11 @@
+id,lat,lng,location,elevation,slopeAngle,rainfall,soilType,vegetation,landslideRisk,avalancheRisk,temperature,humidity
+1,30.0668,79.0193,Dehradun,640,8,2400,Alluvial,Agricultural,Medium,Low,20,72
+2,29.3919,79.9640,Nainital,2084,25,1700,Loamy,Dense Forest,High,Medium,13,78
+3,30.3165,78.0322,Rishikesh,372,12,2100,Sandy,Mixed,Medium,Low,23,68
+4,29.8543,78.0736,Haridwar,314,5,1500,Alluvial,Agricultural,Medium,Low,26,62
+5,30.0869,79.6947,Almora,1638,30,1600,Rocky,Dense Forest,High,High,10,82
+6,29.5993,79.8214,Pithoragarh,1645,35,1400,Rocky,Sparse Forest,High,High,8,78
+7,30.4000,79.0600,Uttarkashi,1158,28,1800,Rocky,Mixed,High,Medium,12,80
+8,30.1500,78.7800,Tehri,770,22,1900,Clay,Dense Forest,High,Medium,16,85
+9,29.8400,78.9500,Pauri,1814,20,1700,Loamy,Mixed,High,Medium,14,75
+10,29.6857,79.2057,Bageshwar,1004,15,1550,Sandy,Sparse Forest,Medium,Low,18,70

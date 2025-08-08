@@ -1,0 +1,11 @@
+id,lat,lng,location,elevation,slopeAngle,rainfall,soilType,vegetation,landslideRisk,avalancheRisk,temperature,humidity
+1,22.5726,88.3639,Kolkata,9,2,1582,Alluvial,Agricultural,Low,Low,27,78
+2,27.0360,88.2627,Darjeeling,2042,40,3000,Loamy,Dense Forest,High,Medium,12,85
+3,27.3389,88.6065,Kalimpong,1247,35,2800,Rocky,Dense Forest,High,Low,15,82
+4,26.7271,88.3953,Kurseong,1458,30,2500,Clay,Dense Forest,Medium,Low,16,80
+5,26.7271,88.4296,Siliguri,122,5,2200,Sandy,Mixed,Low,Low,24,75
+6,26.5499,89.4603,Jalpaiguri,75,3,2000,Alluvial,Agricultural,Low,Low,26,70
+7,26.3259,89.4497,Cooch Behar,43,2,1800,Clay,Agricultural,Low,Low,28,68
+8,26.8467,89.2615,Alipurduar,91,4,1900,Sandy,Mixed,Low,Low,25,72
+9,23.7957,87.7554,Gangtok,1650,38,3200,Rocky,Dense Forest,High,Medium,10,88
+10,25.5788,91.8933,Shillong,1496,32,2400,Laterite,Dense Forest,Medium,Low,18,85
